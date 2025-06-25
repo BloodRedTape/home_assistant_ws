@@ -33,15 +33,15 @@ class Message {
 }
 
 class EventChange {
-  List<Entity> changes;
+  List<EntityChange> changes;
   EventChange({required this.changes});
 
-  static List<Entity> parse(Map<String, dynamic> data) {
-    return data.entries.toList().map((e) => Entity.fromChangeEvent((e.key, e.value))).toList();
+  static List<EntityChange> parse(Map<String, dynamic> data) {
+    return data.entries.toList().map((e) => EntityChange.fromChangeEvent((e.key, e.value))).toList();
   }
 
   factory EventChange.fromData(Map<String, dynamic> data) {
-    List<Entity> entities = Utils.getAndConvert<Map<String, dynamic>, List<Entity>>(data, ['c'], parse) ?? [];
+    List<EntityChange> entities = Utils.getAndConvert<Map<String, dynamic>, List<EntityChange>>(data, ['c'], parse) ?? [];
 
     return EventChange(changes: entities);
   }

@@ -159,11 +159,32 @@ class Entity {
 
     return Entity(entityId: data.$1, state: state, attributes: attributes);
   }
+}
 
-  factory Entity.fromChangeEvent((String, Map<String, dynamic>) data) {
-    final attributes = Utils.getAndConvert<Map<String, dynamic>, EntityAttributes>(data.$2, ['+', 'a'], EntityAttributes.fromData);
-    final state = Utils.get<String>(data.$2, ['+', 's']);
+class EntityValueChange {
+  dynamic newValue;
 
-    return Entity(entityId: data.$1, state: state, attributes: attributes);
+  EntityValueChange({required this.newValue});
+}
+
+class EntityChange {
+  String entityId;
+  EntityValueChange? stateChange;
+  Map<String, EntityValueChange> attributesChange;
+
+  EntityChange({required this.entityId, required this.stateChange, required this.attributesChange});
+
+  factory EntityChange.fromChangeEvent((String, Map<String, dynamic>) data) {
+    EntityValueChange? stateChange = Utils.has(data.$2, ['+', 's']) ? EntityValueChange(newValue: Utils.get<String>(data.$2, ['+', 's'])) : null;
+
+    final attributes = Utils.get<Map<String, dynamic>>(data.$2, ['+', 'a']);
+
+    Map<String, EntityValueChange> attributesChange = {};
+
+    for (MapEntry<String, dynamic> attribute in attributes?.entries ?? {}) {
+      attributesChange.putIfAbsent(attribute.key, () => EntityValueChange(newValue: attribute.value));
+    }
+
+    return EntityChange(entityId: data.$1, stateChange: stateChange, attributesChange: attributesChange);
   }
 }

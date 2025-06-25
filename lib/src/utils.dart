@@ -19,6 +19,10 @@ class Utils {
     return getAndConvert<T, T>(map, keys, none<T>);
   }
 
+  static bool has(dynamic map, List<String> keys) {
+    return get<dynamic>(map, keys) != null;
+  }
+
   static T getOrDefault<T>(dynamic map, List<String> keys, T def) {
     return get(map, keys) ?? def;
   }
