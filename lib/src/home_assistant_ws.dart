@@ -6,11 +6,20 @@ import 'package:web_socket_channel/io.dart';
 import "models/message.dart";
 import 'dart:convert';
 
+export "models/message.dart";
+
+class CallbackInfo {
+  final void Function(Message) callback;
+  final bool once;
+
+  const CallbackInfo({required this.callback, required this.once});
+}
+
 class HomeAssistantWs {
   final String token;
   final String baseUrl;
   WebSocketChannel? _webSocketChannel;
-  Map<dynamic, void Function(Message)> _callbacks = {};
+  final Map<dynamic, CallbackInfo> _callbacks = {};
   int _id = 1;
 
   HomeAssistantWs({required this.token, required this.baseUrl});
@@ -49,12 +58,12 @@ class HomeAssistantWs {
     return true;
   }
 
-  Future<Message> send(String type, Map<String, dynamic> data, {String? replyType, Duration delay = const Duration(seconds: 5)}) {
+  Future<Message> send(String type, Map<String, dynamic> data, {String? replyType, Duration timeout = const Duration(seconds: 20)}) {
     Completer<Message> completer = Completer();
 
     final key = sendCallback(type, data, (message) => completer.complete(message), replyType: replyType);
 
-    Future.delayed(delay).then((value) {
+    Future.delayed(timeout).then((value) {
       if (completer.isCompleted) return;
 
       completer.completeError(TimeoutException('Timeout'));
@@ -69,25 +78,22 @@ class HomeAssistantWs {
     return completer.future;
   }
 
-  dynamic sendCallback(String type, Map<String, dynamic> data, void Function(Message message) callback, {String? replyType}) {
+  dynamic sendCallback(String type, Map<String, dynamic> data, void Function(Message message) callback, {String? replyType, bool once = true}) {
     var channel = _webSocketChannel;
 
     if (channel == null) return null;
 
-    Message message = Message(type: type, data: data, id: null);
+    Message message = Message(type: type, data: data, id: replyType == null ? _id++ : null);
 
-    channel.sink.add(jsonEncode(message.toJson()));
+    final messageString = jsonEncode(message.toJson());
+    print('sent $messageString');
+    channel.sink.add(messageString);
 
-    if (replyType != null) {
-      _callbacks.putIfAbsent(replyType, () => callback);
+    dynamic key = replyType ?? message.id;
 
-      return replyType;
-    } else {
-      message.id = _id++;
-      _callbacks.putIfAbsent(message.id, () => callback);
+    _callbacks.putIfAbsent(key, () => CallbackInfo(callback: callback, once: once));
 
-      return message.id;
-    }
+    return key;
   }
 
   dynamic findCallback({int? id, String? type}) {
@@ -109,18 +115,30 @@ class HomeAssistantWs {
   }
 
   void onData(dynamic data) {
-    Message message = Message.fromJson(jsonDecode(data));
-    print('got ${message.id} ${message.type}');
+    final json = jsonDecode(data);
+    if (json is List<Map<String, dynamic>>) {
+      for (final jsonMessage in json) {
+        onMessage(Message.fromJson(jsonMessage));
+      }
+    }
+    if (json is Map<String, dynamic>) {
+      onMessage(Message.fromJson(json));
+    }
+  }
 
+  void onMessage(Message message) {
     final key = findCallback(id: message.id, type: message.type);
+    final info = _callbacks[key];
 
-    if (key != null) {
-      _callbacks[key]?.call(message);
-      _callbacks.remove(key);
+    if (info != null) {
+      info.callback.call(message);
+
+      if (info.once) _callbacks.remove(key);
     }
   }
 
   void onError(dynamic error) {}
+
   void onDone() {}
 
   Future<IOWebSocketChannel> createUntrustedWebSocketChannel(String url) async {
