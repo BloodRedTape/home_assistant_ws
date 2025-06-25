@@ -39,7 +39,7 @@ class HomeAssistantWs {
   }) async {
     Message message = await _api.send('call_service', {'domain': domain, 'service': service, 'return_response': returnResponse, 'service_data': serviceData});
 
-    return returnResponse ? ServiceResponse.fromJson(message.data) : null;
+    return returnResponse ? ServiceResponse.fromData(message.data) : null;
   }
 
   Future<void> executeServiceForEntity(String entityId, String service, {Map<String, dynamic> additionalData = const {}}) async {
