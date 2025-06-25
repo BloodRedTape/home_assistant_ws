@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:home_assistant_ws/src/models/service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:io';
 import 'package:web_socket_channel/io.dart';
@@ -147,5 +148,25 @@ class HomeAssistantWs {
     final socket = await WebSocket.connect(url, customClient: client);
 
     return IOWebSocketChannel(socket);
+  }
+
+  Future<ServiceResponse?> executeService({
+    required String domain,
+    required String service,
+    Map<String, dynamic> serviceData = const {},
+    bool returnResponse = false,
+  }) async {
+    Message message = await send('call_service', {'domain': domain, 'service': service, 'return_response': returnResponse, 'service_data': serviceData});
+
+    return returnResponse ? ServiceResponse.fromJson(message.data) : null;
+  }
+
+  Future<void> executeServiceForEntity(String entityId, String service, {Map<String, dynamic> additionalData = const {}}) async {
+    Map<String, dynamic> data = Map.from(additionalData);
+    data["entity_id"] = entityId;
+
+    String domain = entityId.split('.').first;
+
+    await executeService(domain: domain, service: service, serviceData: data, returnResponse: false);
   }
 }
