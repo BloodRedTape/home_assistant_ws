@@ -23,10 +23,12 @@ class HomeAssistantWsApi {
   final String baseUrl;
   WebSocketChannel? _webSocketChannel;
   final Map<CallbackHandle, CallbackInfo> _callbacks = {};
-  CallbackHandle _lastCallbackHandle = 0;
-  int _id = 1;
+  late CallbackHandle _lastCallbackHandle;
+  late int _id;
 
-  HomeAssistantWsApi({required this.baseUrl});
+  HomeAssistantWsApi({required this.baseUrl}) {
+    _reset();
+  }
 
   Future<bool> connect() async {
     _webSocketChannel = await createUntrustedWebSocketChannel(baseUrl);
@@ -53,6 +55,21 @@ class HomeAssistantWsApi {
       return false;
     }
     return true;
+  }
+
+  void _reset() {
+    _callbacks.clear();
+    _id = 1;
+    _lastCallbackHandle = 0;
+  }
+
+  Future<void> close() async {
+    _reset();
+
+    if (_webSocketChannel == null) return;
+
+    await _webSocketChannel?.sink.close();
+    await _webSocketChannel?.stream.drain();
   }
 
   int makeNextCallbackHandle() {
