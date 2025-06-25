@@ -8,7 +8,8 @@ class HomeAssistantWs {
   final HomeAssistantWsApi _api;
   final String token;
 
-  HomeAssistantWs({required this.token, required String baseUrl}) : _api = HomeAssistantWsApi(baseUrl: baseUrl);
+  HomeAssistantWs({required this.token, required String baseUrl, void Function()? onDone, void Function(dynamic)? onError})
+    : _api = HomeAssistantWsApi(baseUrl: baseUrl, onDone: onDone, onError: onError);
 
   Future<bool> connect() async {
     if (!await _api.connect()) return false;

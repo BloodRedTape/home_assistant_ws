@@ -25,8 +25,10 @@ class HomeAssistantWsApi {
   final Map<CallbackHandle, CallbackInfo> _callbacks = {};
   late CallbackHandle _lastCallbackHandle;
   late int _id;
+  void Function()? onDone;
+  void Function(dynamic)? onError;
 
-  HomeAssistantWsApi({required this.baseUrl}) {
+  HomeAssistantWsApi({required this.baseUrl, this.onDone, this.onError}) {
     _reset();
   }
 
@@ -166,10 +168,6 @@ class HomeAssistantWsApi {
       }
     }
   }
-
-  void onError(dynamic error) {}
-
-  void onDone() {}
 
   Future<IOWebSocketChannel> createUntrustedWebSocketChannel(String url) async {
     final client = HttpClient()..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
