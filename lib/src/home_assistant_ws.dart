@@ -22,6 +22,10 @@ class HomeAssistantWs {
     }
   }
 
+  Future<void> disconnect() {
+    return _api.close();
+  }
+
   Future<bool> isConnected() {
     return _api.ready();
   }
