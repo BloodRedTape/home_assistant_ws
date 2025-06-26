@@ -70,7 +70,7 @@ class HomeAssistantWsApi {
 
     if (_webSocketChannel == null) return;
 
-    await _webSocketChannel?.sink.close();
+    await _webSocketChannel?.sink.close(1000);
   }
 
   int makeNextCallbackHandle() {
