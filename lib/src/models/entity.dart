@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:home_assistant_ws/src/utils.dart';
 
 class EntityAttributes {
@@ -17,6 +19,9 @@ class EntityAttributes {
   int? minTemp, maxTemp;
   double? currentTemperature, temperature, targetTempLow, targetTempHigh;
   String? presetMode, hvacAction, fanMode;
+  // Fan
+  double? percentage, percentageStep;
+  List<String>? presetModes;
 
   // Camera
   String? videoUrl, entityPicture;
@@ -51,6 +56,11 @@ class EntityAttributes {
     this.presetMode,
     this.hvacAction,
     this.fanMode,
+
+    //Fan
+    this.percentage,
+    this.percentageStep,
+    this.presetModes,
 
     // Camera
     this.videoUrl,
@@ -94,6 +104,11 @@ class EntityAttributes {
       hvacAction: containsKeyAndValue(json, 'hvac_action') ? json['hvac_action'] : null,
       fanMode: containsKeyAndValue(json, 'fan_mode') ? json['fan_mode'] : null,
 
+      // Fan
+      percentage: containsKeyAndValue(json, 'percentage') ? json['percentage'].toDouble() : null,
+      percentageStep: containsKeyAndValue(json, 'percentage_step') ? json['percentage_step'].toDouble() : null,
+      presetModes: containsKeyAndValue(json, 'preset_modes') ? List<String>.from(json['preset_modes']) : null,
+
       // Camera
       videoUrl: containsKeyAndValue(json, 'video_url') ? json['video_url'] : null,
       entityPicture: containsKeyAndValue(json, 'entity_picture') ? json['entity_picture'] : null,
@@ -129,6 +144,11 @@ class EntityAttributes {
       'preset_mode': presetMode,
       'hvac_action': hvacAction,
       'fan_mode': fanMode,
+
+      //Fan
+      'percentage': percentage,
+      'percentage_step': percentageStep,
+      'preset_modes': presetModes,
 
       // Camera
       'video_url': videoUrl,

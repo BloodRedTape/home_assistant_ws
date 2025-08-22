@@ -8,6 +8,8 @@ import "models/message.dart";
 import 'dart:convert';
 import 'package:collection/collection.dart';
 
+import 'web/stub.dart' if (dart.library.io) 'web/io.dart' if (dart.library.html) 'web/html.dart';
+
 class CallbackInfo {
   final int? id;
   final List<String>? types;
@@ -32,8 +34,8 @@ class HomeAssistantWsApi {
     _reset();
   }
 
-  Future<bool> connect() async {
-    _webSocketChannel = await createUntrustedWebSocketChannel(baseUrl);
+  Future<bool> connect({bool unsafe = false}) async {
+    _webSocketChannel = await createWebSocketChannel(baseUrl, allowBadCertificates: unsafe);
 
     if (!await ready()) return false;
 
@@ -168,11 +170,7 @@ class HomeAssistantWsApi {
     }
   }
 
-  Future<IOWebSocketChannel> createUntrustedWebSocketChannel(String url) async {
-    final client = HttpClient()..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
-
-    final socket = await WebSocket.connect(url, customClient: client);
-
-    return IOWebSocketChannel(socket);
+  Future<WebSocketChannel> createWebSocketChannel(String url, {bool allowBadCertificates = false}) {
+    return createChannel(url, allowBadCertificates: allowBadCertificates);
   }
 }
